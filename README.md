@@ -1,10 +1,10 @@
 # CitizenAgent Setup CLI
 
-A .NET CLI tool for creating and configuring Agent 365 resources, following the same patterns and quality standards as the official [Microsoft CitizenAgent DevTools CLI](https://github.com/microsoft/CitizenAgent-devTools).
+A .NET CLI tool for creating and configuring Citizen Agent resources.
 
 ## Features
 
-The CLI provides comprehensive tooling for Agent 365 setup:
+The CLI provides comprehensive tooling for Citizen Agent setup:
 
 | Command | Description |
 |---------|-------------|
@@ -196,19 +196,6 @@ This CLI follows the patterns established by the official CitizenAgent DevTools 
 - **Error Handling**: Custom exceptions with exit codes and suggestions
 - **Idempotent Operations**: Checks for existing resources before creating
 - **Progress Feedback**: Clear phase and step indicators
-
-## Comparison with PowerShell Script
-
-| Feature | PowerShell Script | .NET CLI |
-|---------|------------------|----------|
-| Language | PowerShell | C# |
-| Dependency Injection | ❌ | ✅ |
-| Unit Testable | Limited | ✅ |
-| Cross-platform | ⚠️ | ✅ |
-| Type Safety | ❌ | ✅ |
-| Structured Logging | ❌ | ✅ |
-| Config File Support | ❌ | ✅ |
-| Granular Commands | ❌ | ✅ |
 
 ## License
 
