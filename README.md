@@ -16,6 +16,49 @@ The CLI provides comprehensive tooling for Citizen Agent setup:
 | `config init` | Generate configuration file template |
 | `config validate` | Validate configuration file |
 
+## Prerequisites
+
+Before using the CitizenAgent CLI, you must create a **custom Entra ID app registration** with specific Microsoft Graph API permissions.
+
+### 1. Create Custom Client App Registration
+
+1. Go to **Azure Portal** → **Microsoft Entra ID** → **App registrations** → **New registration**
+2. Enter:
+   - **Name**: `CitizenAgent-CLI` (or your preferred name)
+   - **Supported account types**: Single tenant (Accounts in this organizational directory only)
+   - **Redirect URI**: Select **Public client/native (mobile & desktop)** → Enter `http://localhost`
+3. Click **Register**
+4. Copy the **Application (client) ID** - you'll need this later
+
+### 2. Configure API Permissions
+
+Add the following **Delegated permissions** (NOT Application permissions):
+
+| Permission | Purpose |
+|------------|---------|
+| `Application.ReadWrite.All` | Create and manage Blueprint app registrations |
+| `User.ReadWrite.All` | Create Agent Users |
+| `DelegatedPermissionGrant.ReadWrite.All` | Grant OAuth2 permissions |
+| `Directory.Read.All` | Read directory data for validation |
+
+To add permissions:
+1. In your app registration, go to **API permissions**
+2. Click **Add a permission** → **Microsoft Graph** → **Delegated permissions**
+3. Search and add each permission listed above
+4. Click **Grant admin consent for [Your Tenant]**
+5. Verify all permissions show green checkmarks ✓
+
+> ⚠️ **Important**: Use **Delegated permissions** (you sign in, CLI acts on your behalf), NOT Application permissions.
+
+### 3. Required Admin Roles
+
+Your account must have one of these roles to grant admin consent:
+- **Application Administrator** (recommended)
+- **Cloud Application Administrator**
+- **Global Administrator**
+
+> 💡 **Why is this required?** The CLI needs elevated permissions to create and manage Agent Identity Blueprints in your tenant. You maintain control over which permissions are granted, and the app stays within your tenant's security boundaries.
+
 ## Installation
 
 ### Build from Source
@@ -37,7 +80,7 @@ dotnet tool install --global --add-source ./nupkg CitizenAgent.Setup.Cli
 
 ### Quick Start (Recommended)
 
-**Step 1:** Login via Azure CLI (required):
+**Step 1:** Login via Azure CLI:
 
 ```bash
 az login
@@ -51,6 +94,7 @@ ca-setup config init
 
 **Step 3:** Edit `citizen-agent.config.json` with your values:
 - `tenantId` - Your Azure AD tenant ID
+- `clientAppId` - **The App ID from Prerequisites step 1**
 - `blueprintDisplayName` - Name for the Blueprint app
 - `agentIdentityDisplayName` - Name for the Agent Identity
 - `agentUserUpn` - UPN for the Agent User (e.g., myagent@contoso.com)
@@ -61,7 +105,7 @@ ca-setup config init
 ca-setup setup
 ```
 
-That's it! The CLI authenticates via Azure CLI and creates all resources automatically.
+A browser window will open for authentication. Sign in with your admin account and the CLI will create all resources automatically.
 
 ### Individual Commands
 
@@ -70,7 +114,8 @@ That's it! The CLI authenticates via Azure CLI and creates all resources automat
 ```bash
 ca-setup blueprint create \
   --tenant-id "..." \
-  --name "MyAgent-Blueprint"
+  --name "MyAgent-Blueprint" \
+  --client-app-id "your-app-id"
 ```
 
 #### Create Agent Identity
@@ -90,7 +135,8 @@ ca-setup user create \
   --tenant-id "..." \
   --upn "myagent@contoso.com" \
   --display-name "My Agent" \
-  --identity-id "..."
+  --identity-id "..." \
+  --client-app-id "your-app-id"
 ```
 
 #### Create Permission Grant
@@ -99,31 +145,28 @@ ca-setup user create \
 ca-setup permissions grant \
   --tenant-id "..." \
   --identity-id "..." \
-  --user-id "..."
+  --user-id "..." \
+  --client-app-id "your-app-id"
 ```
 
-## Prerequisites
+## Troubleshooting
 
-### Azure CLI Authentication
+### "This operation cannot be performed for the specified calling identity type"
 
-The CLI uses interactive authentication via Azure CLI. Before using, login with an account that has admin privileges:
+This error means you're using Azure CLI authentication instead of the custom client app. Make sure:
+1. You have created the custom app registration (see Prerequisites)
+2. The `clientAppId` is set in your `citizen-agent.config.json`
+3. Or pass `--client-app-id` on the command line
 
-```bash
-az login
-```
+### "Insufficient privileges to complete the operation"
 
-Your account must have one of these roles:
-- **Global Administrator**
-- **Application Administrator**
-- **Cloud Application Administrator**
+Ensure your custom app has all required delegated permissions with admin consent granted.
 
-### Required Permissions
+### Browser doesn't open for authentication
 
-The authenticated user needs permissions to:
-- Create App Registrations
-- Create Service Principals
-- Create Users
-- Grant OAuth2 permissions
+The CLI uses interactive browser authentication when a `clientAppId` is provided. Ensure:
+1. Port 80 is not blocked by firewall
+2. You have a default browser configured
 
 ## Output
 
