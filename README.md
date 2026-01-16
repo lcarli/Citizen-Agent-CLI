@@ -35,38 +35,23 @@ dotnet tool install --global --add-source ./nupkg CitizenAgent.Setup.Cli
 
 ## Usage
 
-### Complete Setup (Recommended)
+### Quick Start (Recommended)
 
-Run all phases in one command:
-
-```bash
-ca-setup setup \
-  --tenant-id "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" \
-  --blueprint-name "MyAgent-Blueprint" \
-  --identity-name "MyAgent-Identity" \
-  --user-upn "myagent@contoso.com" \
-  --user-display-name "My Agent" \
-  --client-id "11111111-2222-3333-4444-555555555555" \
-  --client-secret "your-management-app-secret" \
-  --foundry-resource "/subscriptions/.../providers/Microsoft.CognitiveServices/accounts/my-foundry" \
-  --webhook-url "https://myagent.azurewebsites.net/webhook"
-```
-
-### Using Configuration File
-
-1. Generate a configuration template:
+**Step 1:** Generate a configuration file template:
 
 ```bash
-ca-setup config init --output my-agent-config.json
+ca-setup config init
 ```
 
-2. Edit the configuration file with your values
+**Step 2:** Edit `citizen-agent.config.json` with your values (tenant ID, app credentials, agent names, etc.)
 
-3. Run setup with the configuration:
+**Step 3:** Run the complete setup:
 
 ```bash
-ca-setup setup --config my-agent-config.json
+ca-setup setup
 ```
+
+That's it! The CLI will create all required resources automatically.
 
 ### Individual Commands
 
