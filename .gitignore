@@ -1,0 +1,37 @@
+# Build results
+bin/
+obj/
+nupkg/
+out/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+
+# Rider
+.idea/
+
+# Build outputs
+*.dll
+*.exe
+*.pdb
+
+# NuGet
+*.nupkg
+packages/
+
+# Logs
+*.log
+logs/
+
+# Config with secrets
+citizen-agent.config.json
+
+# OS
+.DS_Store
+Thumbs.db
