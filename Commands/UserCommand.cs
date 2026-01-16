@@ -27,15 +27,13 @@ public class UserCommand
         var userUpnOption = new Option<string>("--upn", "Agent User UPN") { IsRequired = true };
         var displayNameOption = new Option<string>("--display-name", () => "Agent User", "Agent User display name");
         var identityIdOption = new Option<string>("--identity-id", "Agent Identity ID") { IsRequired = true };
-        var clientIdOption = new Option<string>("--client-id", "Management App Client ID") { IsRequired = true };
-        var clientSecretOption = new Option<string>("--client-secret", "Management App Client Secret") { IsRequired = true };
+        var clientAppIdOption = new Option<string?>("--client-app-id", "Optional: Client App ID for delegated authentication");
 
         createCommand.AddOption(tenantIdOption);
         createCommand.AddOption(userUpnOption);
         createCommand.AddOption(displayNameOption);
         createCommand.AddOption(identityIdOption);
-        createCommand.AddOption(clientIdOption);
-        createCommand.AddOption(clientSecretOption);
+        createCommand.AddOption(clientAppIdOption);
 
         createCommand.SetHandler(async (context) =>
         {
@@ -43,17 +41,16 @@ public class UserCommand
             var userUpn = context.ParseResult.GetValueForOption(userUpnOption)!;
             var displayName = context.ParseResult.GetValueForOption(displayNameOption)!;
             var identityId = context.ParseResult.GetValueForOption(identityIdOption)!;
-            var clientId = context.ParseResult.GetValueForOption(clientIdOption)!;
-            var clientSecret = context.ParseResult.GetValueForOption(clientSecretOption)!;
+            var clientAppId = context.ParseResult.GetValueForOption(clientAppIdOption);
             var ct = context.GetCancellationToken();
 
             try
             {
                 outputService.WritePhase("Agent User Creation");
 
-                outputService.WriteStep("Acquiring management token...");
-                await graphService.GetAccessTokenAsync(tenantId, clientId, clientSecret, ct);
-                outputService.WriteStep("Token acquired", StepStatus.Success);
+                outputService.WriteStep("Authenticating via Azure CLI or browser...");
+                await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
+                outputService.WriteStep("Authentication successful", StepStatus.Success);
 
                 var existing = await userService.FindAgentUserAsync(userUpn, ct);
                 if (existing != null)

@@ -27,22 +27,19 @@ public class BlueprintCommand
         
         var tenantIdOption = new Option<string>("--tenant-id", "Azure AD tenant ID") { IsRequired = true };
         var blueprintNameOption = new Option<string>("--name", "Blueprint App display name") { IsRequired = true };
-        var clientIdOption = new Option<string>("--client-id", "Management App Client ID") { IsRequired = true };
-        var clientSecretOption = new Option<string>("--client-secret", "Management App Client Secret") { IsRequired = true };
+        var clientAppIdOption = new Option<string?>("--client-app-id", "Optional: Client App ID for delegated authentication");
         var createSecretOption = new Option<bool>("--create-secret", () => true, "Create client secret for the blueprint");
 
         createCommand.AddOption(tenantIdOption);
         createCommand.AddOption(blueprintNameOption);
-        createCommand.AddOption(clientIdOption);
-        createCommand.AddOption(clientSecretOption);
+        createCommand.AddOption(clientAppIdOption);
         createCommand.AddOption(createSecretOption);
 
         createCommand.SetHandler(async (context) =>
         {
             var tenantId = context.ParseResult.GetValueForOption(tenantIdOption)!;
             var blueprintName = context.ParseResult.GetValueForOption(blueprintNameOption)!;
-            var clientId = context.ParseResult.GetValueForOption(clientIdOption)!;
-            var clientSecret = context.ParseResult.GetValueForOption(clientSecretOption)!;
+            var clientAppId = context.ParseResult.GetValueForOption(clientAppIdOption);
             var createSecret = context.ParseResult.GetValueForOption(createSecretOption);
             var ct = context.GetCancellationToken();
 
@@ -50,10 +47,10 @@ public class BlueprintCommand
             {
                 outputService.WritePhase("Blueprint App Creation");
 
-                // Authenticate
-                outputService.WriteStep("Acquiring management token...");
-                await graphService.GetAccessTokenAsync(tenantId, clientId, clientSecret, ct);
-                outputService.WriteStep("Token acquired", StepStatus.Success);
+                // Authenticate interactively
+                outputService.WriteStep("Authenticating via Azure CLI or browser...");
+                await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
+                outputService.WriteStep("Authentication successful", StepStatus.Success);
 
                 // Check if exists
                 var existing = await blueprintService.FindAppByDisplayNameAsync(blueprintName, ct);
@@ -103,18 +100,16 @@ public class BlueprintCommand
         
         listCommand.AddOption(tenantIdOption);
         listCommand.AddOption(blueprintNameOption);
-        listCommand.AddOption(clientIdOption);
-        listCommand.AddOption(clientSecretOption);
+        listCommand.AddOption(clientAppIdOption);
 
         listCommand.SetHandler(async (context) =>
         {
             var tenantId = context.ParseResult.GetValueForOption(tenantIdOption)!;
             var blueprintName = context.ParseResult.GetValueForOption(blueprintNameOption)!;
-            var clientId = context.ParseResult.GetValueForOption(clientIdOption)!;
-            var clientSecret = context.ParseResult.GetValueForOption(clientSecretOption)!;
+            var clientAppId = context.ParseResult.GetValueForOption(clientAppIdOption);
             var ct = context.GetCancellationToken();
 
-            await graphService.GetAccessTokenAsync(tenantId, clientId, clientSecret, ct);
+            await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
             
             var app = await blueprintService.FindAppByDisplayNameAsync(blueprintName, ct);
             if (app != null)

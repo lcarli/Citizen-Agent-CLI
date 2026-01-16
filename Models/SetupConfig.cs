@@ -53,16 +53,11 @@ public class SetupConfig
     public string AgentUserDisplayName { get; set; } = "Agent User";
 
     /// <summary>
-    /// Management App Client ID
+    /// Optional: Client App ID for interactive authentication
+    /// If not provided, uses Azure CLI authentication
     /// </summary>
-    [JsonPropertyName("mgmtClientId")]
-    public string MgmtClientId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Management App Client Secret
-    /// </summary>
-    [JsonPropertyName("mgmtClientSecret")]
-    public string MgmtClientSecret { get; set; } = string.Empty;
+    [JsonPropertyName("clientAppId")]
+    public string? ClientAppId { get; set; }
 
     /// <summary>
     /// Azure AI Foundry Resource ID (optional)

@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <RootNamespace>CitizenAgent.Setup.Cli</RootNamespace>
     <AssemblyName>ca-setup</AssemblyName>
-    <Version>1.4.2</Version>
+    <Version>1.4.4</Version>
     <Authors>CitizenAgent Team</Authors>
     <Description>CitizenAgent Setup CLI - Create and configure Citizen Agent resources with Azure CLI integration</Description>
     <PackAsTool>true</PackAsTool>

@@ -28,15 +28,13 @@ public class PermissionsCommand
         var identityIdOption = new Option<string>("--identity-id", "Agent Identity Service Principal ID") { IsRequired = true };
         var userIdOption = new Option<string>("--user-id", "Agent User ID") { IsRequired = true };
         var scopesOption = new Option<string>("--scopes", () => DelegatedScopes.DefaultGrantScopes, "OAuth2 scopes (space-separated)");
-        var clientIdOption = new Option<string>("--client-id", "Management App Client ID") { IsRequired = true };
-        var clientSecretOption = new Option<string>("--client-secret", "Management App Client Secret") { IsRequired = true };
+        var clientAppIdOption = new Option<string?>("--client-app-id", "Optional: Client App ID for delegated authentication");
 
         grantCommand.AddOption(tenantIdOption);
         grantCommand.AddOption(identityIdOption);
         grantCommand.AddOption(userIdOption);
         grantCommand.AddOption(scopesOption);
-        grantCommand.AddOption(clientIdOption);
-        grantCommand.AddOption(clientSecretOption);
+        grantCommand.AddOption(clientAppIdOption);
 
         grantCommand.SetHandler(async (context) =>
         {
@@ -44,17 +42,16 @@ public class PermissionsCommand
             var identityId = context.ParseResult.GetValueForOption(identityIdOption)!;
             var userId = context.ParseResult.GetValueForOption(userIdOption)!;
             var scopes = context.ParseResult.GetValueForOption(scopesOption)!;
-            var clientId = context.ParseResult.GetValueForOption(clientIdOption)!;
-            var clientSecret = context.ParseResult.GetValueForOption(clientSecretOption)!;
+            var clientAppId = context.ParseResult.GetValueForOption(clientAppIdOption);
             var ct = context.GetCancellationToken();
 
             try
             {
                 outputService.WritePhase("OAuth2 Permission Grant");
 
-                outputService.WriteStep("Acquiring management token...");
-                await graphService.GetAccessTokenAsync(tenantId, clientId, clientSecret, ct);
-                outputService.WriteStep("Token acquired", StepStatus.Success);
+                outputService.WriteStep("Authenticating via Azure CLI or browser...");
+                await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
+                outputService.WriteStep("Authentication successful", StepStatus.Success);
 
                 outputService.WriteStep("Getting Graph Service Principal...");
                 var graphSpId = await permissionService.GetGraphServicePrincipalIdAsync(ct);

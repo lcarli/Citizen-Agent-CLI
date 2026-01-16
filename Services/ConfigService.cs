@@ -94,9 +94,8 @@ public class ConfigService : IConfigService
             BlueprintDisplayName = "MyAgent-Blueprint",
             AgentIdentityDisplayName = "MyAgent-Identity",
             AgentUserUpn = "myagent@yourdomain.com",
-            AgentUserDisplayName = "My Agent",
-            MgmtClientId = "<management-app-client-id>",
-            MgmtClientSecret = "<management-app-client-secret>"
+            AgentUserDisplayName = "My Agent"
+            // clientAppId is optional - leave empty to use Azure CLI authentication
         };
     }
 
@@ -116,12 +115,6 @@ public class ConfigService : IConfigService
 
         if (string.IsNullOrWhiteSpace(config.AgentUserUpn))
             errors.Add("AgentUserUpn is required");
-
-        if (string.IsNullOrWhiteSpace(config.MgmtClientId))
-            errors.Add("MgmtClientId is required");
-
-        if (string.IsNullOrWhiteSpace(config.MgmtClientSecret))
-            errors.Add("MgmtClientSecret is required");
 
         // Validate UPN format
         if (!string.IsNullOrWhiteSpace(config.AgentUserUpn) && !config.AgentUserUpn.Contains('@'))

@@ -190,8 +190,7 @@ public class ConfigCommand
                 Console.WriteLine($"  Identity Name:       {config.AgentIdentityDisplayName}");
                 Console.WriteLine($"  User UPN:            {config.AgentUserUpn}");
                 Console.WriteLine($"  User Display Name:   {config.AgentUserDisplayName}");
-                Console.WriteLine($"  Management App ID:   {config.MgmtClientId}");
-                Console.WriteLine($"  Management Secret:   {(string.IsNullOrEmpty(config.MgmtClientSecret) ? "(not set)" : "****")}");
+                Console.WriteLine($"  Client App ID:       {config.ClientAppId ?? "(not set)"}");
                 Console.WriteLine($"  Foundry Resource:    {config.FoundryResourceId ?? "(not set)"}");
                 Console.WriteLine($"  Webhook URL:         {config.WebhookUrl ?? "(not set)"}");
 

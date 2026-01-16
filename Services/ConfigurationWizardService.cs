@@ -210,43 +210,8 @@ public class ConfigurationWizardService : IConfigurationWizardService
             Console.WriteLine();
 
             // ═══════════════════════════════════════════════════════════════
-            // Step 1: Management App Credentials
+            // Step 1: Agent Configuration
             // ═══════════════════════════════════════════════════════════════
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine("═══ Step 1: Management App Credentials ═══");
-            Console.ResetColor();
-            Console.WriteLine();
-            Console.WriteLine("The Management App is used to create resources in your tenant.");
-            Console.WriteLine("It needs Application permissions: Application.ReadWrite.All, User.ReadWrite.All");
-            Console.WriteLine();
-
-            var clientId = PromptForInput(
-                "Management App Client ID",
-                existingConfig?.MgmtClientId,
-                "Client ID of your Management App Registration",
-                ValidateGuid);
-
-            if (string.IsNullOrEmpty(clientId))
-            {
-                Console.WriteLine("Client ID is required. Configuration cancelled.");
-                return null;
-            }
-
-            var clientSecret = PromptForSecret(
-                "Management App Client Secret",
-                existingConfig?.MgmtClientSecret,
-                "Client Secret of your Management App");
-
-            if (string.IsNullOrEmpty(clientSecret))
-            {
-                Console.WriteLine("Client Secret is required. Configuration cancelled.");
-                return null;
-            }
-
-            // ═══════════════════════════════════════════════════════════════
-            // Step 2: Agent Configuration
-            // ═══════════════════════════════════════════════════════════════
-            Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.WriteLine("═══ Step 2: Agent Configuration ═══");
             Console.ResetColor();
@@ -328,7 +293,7 @@ public class ConfigurationWizardService : IConfigurationWizardService
             }
 
             // ═══════════════════════════════════════════════════════════════
-            // Step 4: Summary and Confirmation
+            // Step 3: Summary and Confirmation
             // ═══════════════════════════════════════════════════════════════
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -339,8 +304,6 @@ public class ConfigurationWizardService : IConfigurationWizardService
             Console.WriteLine();
             Console.WriteLine($"  Tenant ID              : {tenantId}");
             Console.WriteLine($"  Subscription           : {selectedSubscription.Name} ({selectedSubscription.Id})");
-            Console.WriteLine($"  Management Client ID   : {clientId}");
-            Console.WriteLine($"  Management Secret      : {MaskSecret(clientSecret)}");
             Console.WriteLine();
             Console.WriteLine($"  Blueprint Name         : {blueprintName}");
             Console.WriteLine($"  Identity Name          : {identityName}");
@@ -351,7 +314,7 @@ public class ConfigurationWizardService : IConfigurationWizardService
             Console.WriteLine($"  Webhook URL            : {webhookUrl ?? "(not configured)"}");
             Console.WriteLine();
 
-            Console.Write("Save this configuration? (Y/n): ");
+            Console.Write("Save this configuration? (Y/n): ");;
             var saveResponse = Console.ReadLine()?.Trim().ToLowerInvariant();
 
             if (saveResponse == "n" || saveResponse == "no")
@@ -366,8 +329,6 @@ public class ConfigurationWizardService : IConfigurationWizardService
                 TenantId = tenantId,
                 SubscriptionId = selectedSubscription.Id,
                 SubscriptionName = selectedSubscription.Name,
-                MgmtClientId = clientId,
-                MgmtClientSecret = clientSecret,
                 BlueprintDisplayName = blueprintName ?? derivedNames.BlueprintName,
                 AgentIdentityDisplayName = identityName ?? derivedNames.IdentityName,
                 AgentUserUpn = userUpn ?? derivedNames.UserUpn,

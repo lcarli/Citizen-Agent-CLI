@@ -21,7 +21,7 @@ The CLI provides comprehensive tooling for Citizen Agent setup:
 ### Build from Source
 
 ```bash
-cd custom_project/cli/CitizenAgent.Setup.Cli
+cd CitizenAgent-CLI
 dotnet build
 dotnet run -- --help
 ```
@@ -37,21 +37,31 @@ dotnet tool install --global --add-source ./nupkg CitizenAgent.Setup.Cli
 
 ### Quick Start (Recommended)
 
-**Step 1:** Generate a configuration file template:
+**Step 1:** Login via Azure CLI (required):
+
+```bash
+az login
+```
+
+**Step 2:** Generate a configuration file:
 
 ```bash
 ca-setup config init
 ```
 
-**Step 2:** Edit `citizen-agent.config.json` with your values (tenant ID, app credentials, agent names, etc.)
+**Step 3:** Edit `citizen-agent.config.json` with your values:
+- `tenantId` - Your Azure AD tenant ID
+- `blueprintDisplayName` - Name for the Blueprint app
+- `agentIdentityDisplayName` - Name for the Agent Identity
+- `agentUserUpn` - UPN for the Agent User (e.g., myagent@contoso.com)
 
-**Step 3:** Run the complete setup:
+**Step 4:** Run the complete setup:
 
 ```bash
 ca-setup setup
 ```
 
-That's it! The CLI will create all required resources automatically.
+That's it! The CLI authenticates via Azure CLI and creates all resources automatically.
 
 ### Individual Commands
 
@@ -60,9 +70,7 @@ That's it! The CLI will create all required resources automatically.
 ```bash
 ca-setup blueprint create \
   --tenant-id "..." \
-  --name "MyAgent-Blueprint" \
-  --client-id "..." \
-  --client-secret "..."
+  --name "MyAgent-Blueprint"
 ```
 
 #### Create Agent Identity
@@ -71,9 +79,8 @@ ca-setup blueprint create \
 ca-setup identity create \
   --tenant-id "..." \
   --name "MyAgent-Identity" \
-  --blueprint-sp-id "..." \
-  --client-id "..." \
-  --client-secret "..."
+  --blueprint-app-id "..." \
+  --blueprint-secret "..."
 ```
 
 #### Create Agent User
@@ -83,9 +90,7 @@ ca-setup user create \
   --tenant-id "..." \
   --upn "myagent@contoso.com" \
   --display-name "My Agent" \
-  --identity-id "..." \
-  --client-id "..." \
-  --client-secret "..."
+  --identity-id "..."
 ```
 
 #### Create Permission Grant
@@ -94,30 +99,31 @@ ca-setup user create \
 ca-setup permissions grant \
   --tenant-id "..." \
   --identity-id "..." \
-  --user-id "..." \
-  --client-id "..." \
-  --client-secret "..."
+  --user-id "..."
 ```
 
 ## Prerequisites
 
-### Management App Registration
+### Azure CLI Authentication
 
-Before using this CLI, you must create a Management App Registration in Azure AD with the following **Application permissions** (with admin consent):
-
-- `Application.ReadWrite.All`
-- `User.ReadWrite.All`
-- `DelegatedPermissionGrant.ReadWrite.All`
-- `Directory.ReadWrite.All`
-- `Organization.Read.All` (for license operations)
-
-### Azure CLI (Optional)
-
-For Foundry role assignment, you must be logged in via Azure CLI:
+The CLI uses interactive authentication via Azure CLI. Before using, login with an account that has admin privileges:
 
 ```bash
 az login
 ```
+
+Your account must have one of these roles:
+- **Global Administrator**
+- **Application Administrator**
+- **Cloud Application Administrator**
+
+### Required Permissions
+
+The authenticated user needs permissions to:
+- Create App Registrations
+- Create Service Principals
+- Create Users
+- Grant OAuth2 permissions
 
 ## Output
 
@@ -162,6 +168,7 @@ CitizenAgent.Setup.Cli/
 ├── Models/             # Data models
 └── Services/           # Service layer
     ├── GraphApiService.cs
+    ├── InteractiveAuthService.cs
     ├── BlueprintService.cs
     ├── AgentIdentityService.cs
     ├── AgentUserService.cs
@@ -173,8 +180,9 @@ CitizenAgent.Setup.Cli/
 
 ## Design Principles
 
-This CLI follows the patterns established by the official CitizenAgent DevTools CLI:
+This CLI follows the patterns established by the official Agent365 DevTools CLI:
 
+- **Interactive Authentication**: Uses Azure CLI or browser-based authentication (no client secrets needed)
 - **Dependency Injection**: All services are injectable for testability
 - **Structured Logging**: Uses `Microsoft.Extensions.Logging` with file and console output
 - **Command Pattern**: Uses `System.CommandLine` for CLI parsing

@@ -17,9 +17,14 @@ namespace CitizenAgent.Setup.Cli.Services;
 public interface IGraphApiService
 {
     /// <summary>
-    /// Acquires an access token using client credentials
+    /// Acquires an access token using client credentials (legacy - for backwards compatibility)
     /// </summary>
     Task<string> GetAccessTokenAsync(string tenantId, string clientId, string clientSecret, CancellationToken ct = default);
+
+    /// <summary>
+    /// Acquires an access token using interactive authentication (Azure CLI or browser)
+    /// </summary>
+    Task<string> GetAccessTokenInteractiveAsync(string tenantId, string? clientAppId = null, CancellationToken ct = default);
 
     /// <summary>
     /// Executes a GET request to Microsoft Graph API
@@ -64,6 +69,7 @@ public class GraphApiService : IGraphApiService
 {
     private readonly ILogger<GraphApiService> _logger;
     private readonly HttpClient _httpClient;
+    private readonly IInteractiveAuthService _authService;
     private string _accessToken = string.Empty;
 
     /// <summary>
@@ -71,10 +77,11 @@ public class GraphApiService : IGraphApiService
     /// </summary>
     public string ApiVersion { get; set; } = "beta";
 
-    public GraphApiService(ILogger<GraphApiService> logger, HttpClient httpClient)
+    public GraphApiService(ILogger<GraphApiService> logger, HttpClient httpClient, IInteractiveAuthService authService)
     {
         _logger = logger;
         _httpClient = httpClient;
+        _authService = authService;
         _httpClient.BaseAddress = new Uri(GraphConstants.GraphBaseUrl);
     }
 
@@ -83,6 +90,17 @@ public class GraphApiService : IGraphApiService
     {
         _accessToken = token;
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    /// <inheritdoc />
+    public async Task<string> GetAccessTokenInteractiveAsync(string tenantId, string? clientAppId = null, CancellationToken ct = default)
+    {
+        _logger.LogDebug("Acquiring access token interactively for tenant {TenantId}", tenantId);
+
+        var token = await _authService.GetTokenAsync(tenantId, null, clientAppId, ct);
+        SetAccessToken(token);
+
+        return token;
     }
 
     /// <inheritdoc />

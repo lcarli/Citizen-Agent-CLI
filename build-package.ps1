@@ -40,7 +40,7 @@ if ($Clean) {
 
 # Build
 Write-Header "Building..."
-dotnet build -c Release
+dotnet build CitizenAgent.Setup.Cli.csproj -c Release
 if ($LASTEXITCODE -ne 0) {
     Write-Err "Build failed"
     exit 1
@@ -49,7 +49,7 @@ Write-Success "Build completed"
 
 # Package
 Write-Header "Creating NuGet package..."
-dotnet pack -c Release -o ./nupkg --no-build
+dotnet pack CitizenAgent.Setup.Cli.csproj -c Release -o ./nupkg --no-build
 if ($LASTEXITCODE -ne 0) {
     Write-Err "Package failed"
     exit 1

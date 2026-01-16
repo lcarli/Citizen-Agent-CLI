@@ -27,15 +27,13 @@ public class IdentityCommand
         var identityNameOption = new Option<string>("--name", "Agent Identity display name") { IsRequired = true };
         var blueprintAppIdOption = new Option<string>("--blueprint-app-id", "Blueprint App ID (client_id)") { IsRequired = true };
         var blueprintSecretOption = new Option<string>("--blueprint-secret", "Blueprint Client Secret") { IsRequired = true };
-        var clientIdOption = new Option<string>("--client-id", "Management App Client ID (for initial token)") { IsRequired = true };
-        var clientSecretOption = new Option<string>("--client-secret", "Management App Client Secret (for initial token)") { IsRequired = true };
+        var clientAppIdOption = new Option<string?>("--client-app-id", "Optional: Client App ID for delegated authentication");
 
         createCommand.AddOption(tenantIdOption);
         createCommand.AddOption(identityNameOption);
         createCommand.AddOption(blueprintAppIdOption);
         createCommand.AddOption(blueprintSecretOption);
-        createCommand.AddOption(clientIdOption);
-        createCommand.AddOption(clientSecretOption);
+        createCommand.AddOption(clientAppIdOption);
 
         createCommand.SetHandler(async (context) =>
         {
@@ -43,17 +41,16 @@ public class IdentityCommand
             var identityName = context.ParseResult.GetValueForOption(identityNameOption)!;
             var blueprintAppId = context.ParseResult.GetValueForOption(blueprintAppIdOption)!;
             var blueprintSecret = context.ParseResult.GetValueForOption(blueprintSecretOption)!;
-            var clientId = context.ParseResult.GetValueForOption(clientIdOption)!;
-            var clientSecret = context.ParseResult.GetValueForOption(clientSecretOption)!;
+            var clientAppId = context.ParseResult.GetValueForOption(clientAppIdOption);
             var ct = context.GetCancellationToken();
 
             try
             {
                 outputService.WritePhase("Agent Identity Creation");
 
-                outputService.WriteStep("Acquiring management token...");
-                await graphService.GetAccessTokenAsync(tenantId, clientId, clientSecret, ct);
-                outputService.WriteStep("Token acquired", StepStatus.Success);
+                outputService.WriteStep("Authenticating via Azure CLI or browser...");
+                await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
+                outputService.WriteStep("Authentication successful", StepStatus.Success);
 
                 var existing = await identityService.FindAgentIdentityAsync(identityName, ct);
                 if (existing != null)

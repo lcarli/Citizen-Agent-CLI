@@ -37,8 +37,7 @@ public class SetupCommand
         var identityNameOption = new Option<string?>("--identity-name", "Agent Identity display name");
         var userUpnOption = new Option<string?>("--user-upn", "Agent User UPN (e.g., agent@contoso.com)");
         var userDisplayNameOption = new Option<string?>("--user-display-name", () => "Agent User", "Agent User display name");
-        var clientIdOption = new Option<string?>("--client-id", "Management App Client ID");
-        var clientSecretOption = new Option<string?>("--client-secret", "Management App Client Secret");
+        var clientAppIdOption = new Option<string?>("--client-app-id", "Optional: Client App ID for delegated authentication");
         var foundryResourceOption = new Option<string?>("--foundry-resource", "Azure AI Foundry Resource ID (for RBAC assignment)");
         var skipFoundryOption = new Option<bool>("--skip-foundry", () => false, "Skip Foundry RBAC assignment phase");
         var webhookUrlOption = new Option<string?>("--webhook-url", "Webhook URL for Teams messages");
@@ -53,8 +52,7 @@ public class SetupCommand
         command.AddOption(identityNameOption);
         command.AddOption(userUpnOption);
         command.AddOption(userDisplayNameOption);
-        command.AddOption(clientIdOption);
-        command.AddOption(clientSecretOption);
+        command.AddOption(clientAppIdOption);
         command.AddOption(foundryResourceOption);
         command.AddOption(skipFoundryOption);
         command.AddOption(webhookUrlOption);
@@ -70,8 +68,7 @@ public class SetupCommand
             var identityName = context.ParseResult.GetValueForOption(identityNameOption);
             var userUpn = context.ParseResult.GetValueForOption(userUpnOption);
             var userDisplayName = context.ParseResult.GetValueForOption(userDisplayNameOption);
-            var clientId = context.ParseResult.GetValueForOption(clientIdOption);
-            var clientSecret = context.ParseResult.GetValueForOption(clientSecretOption);
+            var clientAppId = context.ParseResult.GetValueForOption(clientAppIdOption);
             var foundryResource = context.ParseResult.GetValueForOption(foundryResourceOption);
             var skipFoundry = context.ParseResult.GetValueForOption(skipFoundryOption);
             var webhookUrl = context.ParseResult.GetValueForOption(webhookUrlOption);
@@ -101,8 +98,7 @@ public class SetupCommand
                 identityName ??= config.AgentIdentityDisplayName;
                 userUpn ??= config.AgentUserUpn;
                 userDisplayName ??= config.AgentUserDisplayName;
-                clientId ??= config.MgmtClientId;
-                clientSecret ??= config.MgmtClientSecret;
+                clientAppId ??= config.ClientAppId;
                 foundryResource ??= config.FoundryResourceId;
                 webhookUrl ??= config.WebhookUrl;
             }
@@ -113,8 +109,6 @@ public class SetupCommand
             if (string.IsNullOrEmpty(blueprintName)) missingFields.Add("--blueprint-name");
             if (string.IsNullOrEmpty(identityName)) missingFields.Add("--identity-name");
             if (string.IsNullOrEmpty(userUpn)) missingFields.Add("--user-upn");
-            if (string.IsNullOrEmpty(clientId)) missingFields.Add("--client-id");
-            if (string.IsNullOrEmpty(clientSecret)) missingFields.Add("--client-secret");
 
             if (missingFields.Any())
             {
@@ -152,12 +146,12 @@ public class SetupCommand
                 // Phase 0: Authentication
                 // ============================================================
                 outputService.WritePhase("PHASE 0: Authentication");
-                outputService.WriteStep("Acquiring management token...");
+                outputService.WriteStep("Authenticating via Azure CLI or browser...");
                 
                 #pragma warning disable CS8604
-                await graphService.GetAccessTokenAsync(tenantId, clientId, clientSecret, ct);
+                await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
                 #pragma warning restore CS8604
-                outputService.WriteStep("Management token acquired", StepStatus.Success);
+                outputService.WriteStep("Authentication successful", StepStatus.Success);
 
                 // ============================================================
                 // Phase 1: Blueprint App Registration
@@ -316,6 +310,12 @@ public class SetupCommand
                 // Phase 3: Agent User
                 // ============================================================
                 outputService.WritePhase("PHASE 3: Agent User");
+
+                // Re-authenticate with interactive token for user creation
+                // (The Agent Identity creation may have changed the token)
+                outputService.WriteStep("Re-authenticating for user creation...");
+                await graphService.GetAccessTokenInteractiveAsync(tenantId, clientAppId, ct);
+                outputService.WriteStep("Re-authenticated", StepStatus.Success);
 
                 #pragma warning disable CS8604
                 var existingUser = await agentUserService.FindAgentUserAsync(userUpn, ct);

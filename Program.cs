@@ -151,6 +151,7 @@ class Program
         services.AddSingleton<IConfigService, ConfigService>();
         services.AddSingleton<IAzureCliService, AzureCliService>();
         services.AddSingleton<IConfigurationWizardService, ConfigurationWizardService>();
+        services.AddSingleton<IInteractiveAuthService, InteractiveAuthService>();
         services.AddSingleton<IGraphApiService, GraphApiService>();
         services.AddSingleton<IBlueprintService, BlueprintService>();
         services.AddSingleton<IAgentIdentityService, AgentIdentityService>();
